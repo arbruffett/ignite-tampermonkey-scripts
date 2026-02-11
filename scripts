@@ -1,6 +1,9 @@
 // ==UserScript==
 // @name         rewardsbutler.com
 // @match        https://beta.rewardsbutler.com/*
+// @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/main/scripts/site-enhancements.user.js
+// @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/main/scripts/site-enhancements.user.js
+// @grant        none
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
