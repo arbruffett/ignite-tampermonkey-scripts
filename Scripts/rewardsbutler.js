@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         rewardsbutler.com
 // @match        https://beta.rewardsbutler.com/*
-// @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/main/scripts/site-enhancements.user.js
-// @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/main/scripts/site-enhancements.user.js
+// @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
+// @version      1.0.0
+// @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/rewardsbutler.js
+// @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/rewardsbutler.js
 // @grant        none
 // @run-at       document-end
-// @grant        none
 // ==/UserScript==
 
 (function () {
