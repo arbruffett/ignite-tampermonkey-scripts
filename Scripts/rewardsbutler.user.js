@@ -53,6 +53,36 @@
         return { done: replaced > 0, replaced };
     }
 
+    function neutralizeTopBgHover(root = document) {
+        // Find the header cell using the top background image
+        const tds = Array.from(root.querySelectorAll('td[background]'))
+        .filter(td => /\/images\/topBG\.gif(\?.*)?$/i.test(td.getAttribute('background') || ''));
+
+        tds.forEach(td => {
+            // Stop old-school inline hover handlers if present
+            td.removeAttribute('onmouseover');
+            td.removeAttribute('onmouseout');
+            td.removeAttribute('onmouseenter');
+            td.removeAttribute('onmouseleave');
+
+            const tr = td.closest('tr');
+            if (tr) {
+                tr.removeAttribute('onmouseover');
+                tr.removeAttribute('onmouseout');
+                tr.removeAttribute('onmouseenter');
+                tr.removeAttribute('onmouseleave');
+            }
+
+            // Force the background to stay white (prevents "black flash")
+            td.style.backgroundColor = '#242424';
+            td.style.backgroundImage = 'none';
+
+            // If you still want the old tiled image but not the hover behavior, use this instead:
+            // td.style.backgroundImage = 'url(/images/topBG.gif)';
+            // td.style.backgroundRepeat = 'repeat';
+        });
+    }
+
   let observer = null;
   let scheduled = false;
   let runCount = 0;
@@ -72,7 +102,7 @@
       hud.id = 'rb-debug-hud';
       hud.style.cssText = `
         position:fixed; bottom:10px; right:10px; z-index:999999;
-        background:#111; color:#eee; padding:10px; border-radius:8px;
+        background:#FFFFFF; color:#eee; padding:10px; border-radius:8px;
         font:12px/1.4 monospace; max-width:520px; max-height:45vh; overflow:auto;
         box-shadow:0 2px 12px rgba(0,0,0,.4);
       `;
@@ -499,7 +529,7 @@
       resyncAllSelect2();
 
       const betaHeaderRes = replaceMainTopGifOnBeta();
-
+      neutralizeTopBgHover();
 
       cleanLayoutChrome();
 
