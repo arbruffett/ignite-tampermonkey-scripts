@@ -1,0 +1,124 @@
+// ==UserScript==
+// @name         twiz4edit.php
+// @match        https://beta.rewardsbutler.com/loy/twiz4edit.php*
+// @author       arbruffett
+// @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
+// @version      1.0.0
+// @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/twiz4edit.user.js
+// @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/twiz4edit.user.js
+// @grant        none
+// @run-at       document-end
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  const THROTTLE_MS = 250;
+  let observer = null;
+  let scheduled = false;
+
+  function getId() {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    return id && /^\d+$/.test(id) ? parseInt(id, 10) : null;
+  }
+
+  function findHeaderCell() {
+    // Only one form header on this page
+    return document.querySelector('td.formheader, th.formheader, .formheader');
+  }
+
+  function insertNavBarUnderHeader(headerEl) {
+    const id = getId();
+    if (id === null) return { ok: false, reason: 'no numeric id= found in URL' };
+
+    // Avoid duplicates across mutations
+    if (headerEl.dataset.rbNavInserted === '1') return { ok: true, reason: 'already inserted' };
+
+    const headerRow = headerEl.closest('tr');
+    const container = headerRow && (headerRow.closest('tbody') || headerRow.closest('table'));
+    if (!headerRow || !container) return { ok: false, reason: 'could not locate header row/container' };
+
+    const navTr = document.createElement('tr');
+    navTr.setAttribute('data-rb-twiz4edit-nav', '1');
+
+    const navTd = document.createElement('td');
+    navTd.className = 'tdcenter';
+    navTd.setAttribute('colspan', headerEl.getAttribute('colspan') || '4');
+    navTd.style.whiteSpace = 'nowrap';
+
+    const frag = document.createDocumentFragment();
+    const sep = () => frag.appendChild(document.createTextNode(' | '));
+
+    // Member Group (text) BEFORE Member List
+    frag.appendChild(document.createTextNode('Member Group'));
+
+    // Member List (link) - uses id as the group identifier per your requirement
+    sep();
+    const memberList = document.createElement('a');
+    memberList.href = `https://beta.rewardsbutler.com/loy/twiz4members.php?g=${id}`;
+    memberList.textContent = 'Member List';
+    frag.appendChild(memberList);
+
+    // Add Member (link)
+    sep();
+    const addMember = document.createElement('a');
+    addMember.href = `https://beta.rewardsbutler.com/loy/members.php?g=${id}&goto=twiz4memberadd.php`;
+    addMember.textContent = 'Add Member';
+    frag.appendChild(addMember);
+
+    // Add Card Range (link)
+    sep();
+    const addRange = document.createElement('a');
+    addRange.href = `https://beta.rewardsbutler.com/loy/twiz4range1.php?g=${id}`;
+    addRange.textContent = 'Add Card Range';
+    frag.appendChild(addRange);
+
+    // Upload Members (link)
+    sep();
+    const upload = document.createElement('a');
+    upload.href = `https://beta.rewardsbutler.com/loy/twiz4uploadform.php?g=${id}`;
+    upload.textContent = 'Upload Members';
+    frag.appendChild(upload);
+
+    // Return to Groups (link)
+    sep();
+    const returnGroups = document.createElement('a');
+    returnGroups.href = `https://beta.rewardsbutler.com/loy/twiz4form.php`;
+    returnGroups.textContent = 'Return to Groups';
+    frag.appendChild(returnGroups);
+
+    navTd.appendChild(frag);
+    navTr.appendChild(navTd);
+
+    // Insert directly under the formheader row
+    headerRow.insertAdjacentElement('afterend', navTr);
+
+    headerEl.dataset.rbNavInserted = '1';
+    return { ok: true, id };
+  }
+
+  function apply() {
+    const headerEl = findHeaderCell();
+    if (!headerEl) return;
+    insertNavBarUnderHeader(headerEl);
+  }
+
+  function scheduleApply() {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => {
+      scheduled = false;
+      if (observer) observer.disconnect();
+      try { apply(); }
+      finally {
+        if (observer) observer.observe(document.documentElement, { childList: true, subtree: true });
+      }
+    }, THROTTLE_MS);
+  }
+
+  apply();
+
+  observer = new MutationObserver(() => scheduleApply());
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+})();
