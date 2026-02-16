@@ -4,7 +4,7 @@
 // @match        https://beta.rewardsbutler.com/loy/memberfind.php*
 // @author       arbruffett
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.1
+// @version      1.0.2
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/memberfindCSS.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/memberfindCSS.user.js
 // @run-at       document-end
@@ -14,83 +14,71 @@
 (function () {
   'use strict';
 
-  function findTargetTableAndHeaderRow() {
-    const headerRows = Array.from(document.querySelectorAll('tr')).filter((tr) =>
-      tr.querySelector('td.formsubheader, th.formsubheader')
-    );
+  const WRAP_CLASS = 'rb-sticky-wrap';
+  const DATA_TABLE_CLASS = 'rb-sticky-data';
 
-    for (const headerTr of headerRows) {
-      const table = headerTr.closest('table');
-      if (!table) continue;
-      const hasDataRows = !!table.querySelector('tr.browse-item');
-      if (!hasDataRows) continue;
-      return { table, headerTr };
+  function tagOnce() {
+    // The "frame" table row that contains the sticky nav you injected
+    const navTr = document.querySelector('tr[data-rb-trigger-nav="1"]');
+    if (navTr) {
+      const frameTable = navTr.closest('table');
+      if (frameTable) frameTable.classList.add(WRAP_CLASS);
     }
 
-    return null;
+    // The real data table
+    const dataTable = document.querySelector('table.basic');
+    if (dataTable) dataTable.classList.add(DATA_TABLE_CLASS);
+
+    // Keep no-nav flag in sync as nav row appears/disappears.
+    if (!navTr) document.documentElement.dataset.rbNoNav = '1';
+    else delete document.documentElement.dataset.rbNoNav;
   }
 
-  const target = findTargetTableAndHeaderRow();
-  if (target?.table) {
-    target.table.classList.add('rb-mf-table');
-  }
-  if (target?.headerTr) {
-    target.headerTr.dataset.rbMfHead = '1';
-  }
+  GM_addStyle(`
+    :root{
+      --rb-top: 0px;
+      --rb-nav-h: 0px;     /* adjust if your nav is taller */
+      --rb-bg: #FF8D19;
+      --rb-fg: #111;
+      --rb-band: rgba(0,0,0,.06);
+      --rb-hover: rgba(0,0,0,.10);
+    }
 
-  const CSS = `
-/* =========================
-   CONFIG: tune these per site
-   ========================= */
-:root{
-  --rb-sticky-top: 0px;         /* if the site has a fixed top bar, set to its height */
-  --rb-nav-height: 25px;        /* approximate nav row height (used to avoid overlap) */
-  --rb-head-height: 25px;       /* approximate header row height */
-  --rb-band-odd: rgba(0,0,0,.05);
-  --rb-band-even: rgba(0,0,0,.00);
-}
+    /* --------------------------
+       Sticky COLUMN HEADERS (data table)
+       -------------------------- */
+    table.${DATA_TABLE_CLASS} td.formsubheader,
+    table.${DATA_TABLE_CLASS} th.formsubheader{
+      position: sticky;
+      top: calc(var(--rb-top) + var(--rb-nav-h));
+      z-index: 900;
+      background: var(--rb-bg) !important;
+      color: var(--rb-fg) !important;
+      box-shadow: 0 1px 0 rgba(0,0,0,.12);
+      white-space: nowrap;
+    }
 
-/* Only band data rows in memberfind table */
-table.rb-mf-table tr.browse-item:nth-child(odd){
-  background: var(--rb-band-odd);
-}
-table.rb-mf-table tr.browse-item:nth-child(even){
-  background: var(--rb-band-even);
-}
+    /* If nav row doesn't exist, headers stick to the top */
+    html[data-rb-no-nav="1"] table.${DATA_TABLE_CLASS} td.formsubheader,
+    html[data-rb-no-nav="1"] table.${DATA_TABLE_CLASS} th.formsubheader{
+      top: var(--rb-top);
+    }
 
-/* Optional: subtle hover highlight for readability */
-table.rb-mf-table tr.browse-item:hover td,
-table.rb-mf-table tr.browse-item:hover th {
-  background: rgba(0,0,0,0.1);
-}
+    /* --------------------------
+       Row banding (only real data rows)
+       -------------------------- */
+    table.${DATA_TABLE_CLASS} tr.browse-item:nth-of-type(even) td,
+    table.${DATA_TABLE_CLASS} tr.browse-item:nth-of-type(even) th{
+      background: var(--rb-band);
+    }
 
-/* Sticky only the identified memberfind header row */
-table.rb-mf-table tr[data-rb-mf-head="1"] {
-  position: sticky;
-  top: var(--rb-sticky-top) !important;
-  z-index: 31;
-}
-table.rb-mf-table tr[data-rb-mf-head="1"] > td.formsubheader,
-table.rb-mf-table tr[data-rb-mf-head="1"] > th.formsubheader {
-  position: sticky;
-  top: var(--rb-sticky-top) !important;
-  z-index: 32;
-  background: #FF8D19;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.08);
-  white-space: nowrap;
-}
+    table.${DATA_TABLE_CLASS} tr.browse-item:hover td,
+    table.${DATA_TABLE_CLASS} tr.browse-item:hover th{
+      background: var(--rb-hover);
+    }
+  `);
 
-/* =========================
-   Keep formheader readable (fixes your "black -> white" reload issue)
-   ========================= */
-table.rb-mf-table td.formheader{
-  background: #272727 !important;
-  color: #fff !important;
-}
-`;
-
-  const style = document.createElement('style');
-  style.id = 'rb-memberfind-table-css';
-  style.textContent = CSS;
-  document.documentElement.appendChild(style);
+  tagOnce();
+  window.addEventListener('DOMContentLoaded', tagOnce);
+  new MutationObserver(tagOnce).observe(document.documentElement, { childList: true, subtree: true });
 })();
