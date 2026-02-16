@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         intproducts.php
-// @version      1.0.1
+// @version      1.0.2
 // @description  Enable click-to-sort on Loyalty Reward Exceptions table on /loy/intproducts.php
 // @match        *://*.rewardsbutler.com/loy/intproducts.php*
 // @author       arbruffett
