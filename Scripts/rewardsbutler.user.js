@@ -3,7 +3,7 @@
 // @author       arbruffett
 // @match        https://beta.rewardsbutler.com/*
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.8
+// @version      1.0.9
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/rewardsbutler.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/rewardsbutler.user.js
 // @grant        none

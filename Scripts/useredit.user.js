@@ -2,7 +2,7 @@
 // @name         useredit.php
 // @match        https://beta.rewardsbutler.com/admin/useredit.php*
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.0
+// @version      1.0.1
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/useredit.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/useredit.user.js
 // @grant        none

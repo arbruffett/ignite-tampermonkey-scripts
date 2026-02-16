@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         userbrowse.php
-// @version      2.3
+// @version      2.3.1
 // @description  Populate emails from useredit.php, skip already-email links, add sortable headers, optional debug HUD with sorting diagnostics.
 // @match        https://*.rewardsbutler.com/admin/userbrowse.php*
 // @grant        GM.xmlHttpRequest
