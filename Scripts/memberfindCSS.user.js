@@ -4,7 +4,7 @@
 // @match        https://beta.rewardsbutler.com/loy/memberfind.php*
 // @author       arbruffett
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.0
+// @version      1.0.1
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/memberfindCSS.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/memberfindCSS.user.js
 // @run-at       document-end
@@ -65,11 +65,16 @@ table.rb-mf-table tr.browse-item:hover th {
 }
 
 /* Sticky only the identified memberfind header row */
+table.rb-mf-table tr[data-rb-mf-head="1"] {
+  position: sticky;
+  top: var(--rb-sticky-top) !important;
+  z-index: 31;
+}
 table.rb-mf-table tr[data-rb-mf-head="1"] > td.formsubheader,
 table.rb-mf-table tr[data-rb-mf-head="1"] > th.formsubheader {
   position: sticky;
-  top: var(--rb-sticky-top);
-  z-index: 30;
+  top: var(--rb-sticky-top) !important;
+  z-index: 32;
   background: #FF8D19;
   box-shadow: 0 1px 0 rgba(0,0,0,0.08);
   white-space: nowrap;
