@@ -448,7 +448,7 @@
       { type: 'node', node: uploadProductsLink, fallback: 'Upload Products' },
       { type: 'node', node: existingProductSelector || null, fallback: 'Product Selector' },
       { type: 'text', text: 'Calculate Amount Sold' }, // plain text on this view
-      { type: 'node', node: existingReturnToCombos || null, fallback: 'Return to combos' },
+      { type: 'node', node: existingReturnToCombos || null, fallback: 'Return To Combos' },
     ];
 
     const frag = document.createDocumentFragment();

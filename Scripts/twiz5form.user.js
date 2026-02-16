@@ -103,34 +103,36 @@
     const tbody = addRow.parentElement;
     if (!tbody) return { ok: false, reason: 'no tbody' };
 
-    // Prevent duplicates (mutation reruns)
-    if (tbody.querySelector('tr[data-rb-location-groups-header="1"]') ||
-        tbody.querySelector('tr[data-rb-trigger-nav="1"]')) {
-      return { ok: true, reason: 'already present' };
-    }
+    // Ensure both rows exist; recover if one was removed.
+    let headerTr = tbody.querySelector('tr[data-rb-location-groups-header="1"]');
+    let navTr = tbody.querySelector('tr[data-rb-trigger-nav="1"]');
+    if (headerTr && navTr) return { ok: true, reason: 'already present' };
 
     const firstTd = addRow.querySelector('td, th');
     const colSpan = firstTd ? (parseInt(firstTd.getAttribute('colspan') || '5', 10) || 5) : 5;
 
-    // Header row: Location Groups
-    const headerTr = document.createElement('tr');
-    headerTr.setAttribute('data-rb-location-groups-header', '1');
+    if (!headerTr) {
+      headerTr = document.createElement('tr');
+      headerTr.setAttribute('data-rb-location-groups-header', '1');
 
-    const headerTd = document.createElement('td');
-    headerTd.className = 'formheader';
-    headerTd.colSpan = colSpan;
-    headerTd.textContent = 'Location Groups';
+      const headerTd = document.createElement('td');
+      headerTd.className = 'formheader';
+      headerTd.colSpan = colSpan;
+      headerTd.textContent = 'Location Groups';
 
-    headerTr.appendChild(headerTd);
+      headerTr.appendChild(headerTd);
+      tbody.insertBefore(headerTr, addRow);
+    }
 
-    // Nav row under header
-    const navTr = document.createElement('tr');
-    navTr.setAttribute('data-rb-trigger-nav', '1');
-    navTr.appendChild(buildTriggerNavTd(colSpan));
+    if (!navTr) {
+      navTr = document.createElement('tr');
+      navTr.setAttribute('data-rb-trigger-nav', '1');
+      navTr.appendChild(buildTriggerNavTd(colSpan));
 
-    // Insert header + nav just above the "Add new Group" row
-    tbody.insertBefore(headerTr, addRow);
-    tbody.insertBefore(navTr, addRow);
+      // Keep nav directly under header.
+      if (headerTr.parentElement === tbody) headerTr.insertAdjacentElement('afterend', navTr);
+      else tbody.insertBefore(navTr, addRow);
+    }
 
     return { ok: true };
   }

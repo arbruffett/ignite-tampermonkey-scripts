@@ -31,12 +31,17 @@
     const g = getGroupG();
     if (g === null) return { ok: false, reason: 'no numeric g= found in URL' };
 
-    // Avoid duplicates across mutations
-    if (headerEl.dataset.rbTwiz5AddManyNavInserted === '1') return { ok: true, reason: 'already inserted' };
-    headerEl.dataset.rbTwiz5AddManyNavInserted = '1';
-
     const headerRow = headerEl.closest('tr');
     if (!headerRow) return { ok: false, reason: 'header row not found' };
+
+    // Avoid duplicates across mutations, but recover if nav row was removed.
+    if (headerEl.dataset.rbTwiz5AddManyNavInserted === '1') {
+      const existingNav = headerRow.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-twiz5addmany-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerEl.dataset.rbTwiz5AddManyNavInserted;
+    }
 
     const navTr = document.createElement('tr');
     navTr.setAttribute('data-rb-twiz5addmany-nav', '1');
@@ -86,6 +91,7 @@
     // Insert directly beneath the formheader row
     headerRow.insertAdjacentElement('afterend', navTr);
 
+    headerEl.dataset.rbTwiz5AddManyNavInserted = '1';
     return { ok: true, g };
   }
 
@@ -94,9 +100,6 @@
     if (!headerEl) return;
 
     insertNavBarUnderHeader(headerEl);
-
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    document.body.dataset.rbScrolledTop = '1';
   }
 
   function scheduleApply() {

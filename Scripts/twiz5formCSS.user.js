@@ -28,8 +28,9 @@
     const dataTable = document.querySelector('table.basic');
     if (dataTable) dataTable.classList.add(DATA_TABLE_CLASS);
 
-    // If no nav exists, mark so CSS doesn't offset headers
+    // Keep no-nav flag in sync as nav row appears/disappears.
     if (!navTr) document.documentElement.dataset.rbNoNav = '1';
+    else delete document.documentElement.dataset.rbNoNav;
   }
 
   GM_addStyle(`
@@ -42,9 +43,11 @@
       --rb-hover: rgba(0,0,0,.10);
     }
 
-    /* Example: make the "Description" header/cell narrower */
-    table.basic > td.formsubheader:nth-child(2),
-    table.basic > td:nth-child(2) {
+    /* Make column 2 (Description) narrower in header and data rows */
+    table.basic tr > td.formsubheader:nth-child(2),
+    table.basic tr > td:nth-child(2),
+    table.basic tr > th.formsubheader:nth-child(2),
+    table.basic tr > th:nth-child(2) {
       max-width: 650px;
       overflow: hidden;
       text-overflow: ellipsis;

@@ -356,47 +356,6 @@
         return changed;
     }
 
-    function addUploadProductsLink(container) {
-        // Find the td with the links
-        const td = container.querySelector('td.tdcenter[colspan]');
-        if (!td) return false;
-
-        // Avoid adding it twice
-        if (td.querySelector('a[data-rb-upload-link]')) return false;
-
-        // Find an existing link that contains comboid or r
-        const link = td.querySelector('a[href*="comboid="], a[href*="r="]');
-        if (!link) return false;
-
-        // Extract the numeric id (prefer comboid, fallback to r)
-        let id = null;
-        const comboMatch = link.href.match(/[?&]comboid=(\d+)/);
-        const rMatch = link.href.match(/[?&]r=(\d+)/);
-
-        if (comboMatch) {
-            id = comboMatch[1];
-        } else if (rMatch) {
-            id = rMatch[1];
-        }
-
-        if (!id) return false;
-
-        // Create <br>
-        const br = document.createElement('br');
-
-        // Create <a>
-        const a = document.createElement('a');
-        a.href = `twiz6uploadform.php?r=${id}`;
-        a.textContent = 'Upload Products';
-        a.setAttribute('data-rb-upload-link', '1');
-
-        // Append to td
-        td.appendChild(br);
-        td.appendChild(a);
-
-        return true;
-    }
-
     function removeComboInstructionBox(container) {
         if (!container) return { ok: false, reason: 'no container' };
 
@@ -430,30 +389,6 @@
 
     return updated;
   }
-
-    function addEditComboLink(container) {
-        const td = container.querySelector('td.tdcenter[colspan]');
-        if (!td) return { ok: false, reason: 'link td not found' };
-
-        // Prevent duplicates
-        if (td.querySelector('a[data-rb-edit-combo]')) {
-            return { ok: true, reason: 'already exists' };
-        }
-
-        const x = getCurrentR();
-        if (x === null) return { ok: false, reason: 'no numeric r= found in URL' };
-
-        const a = document.createElement('a');
-        a.href = `https://beta.rewardsbutler.com/loy/comboedit.php?r=${x}`;
-        a.textContent = 'Edit Combo';
-        a.setAttribute('data-rb-edit-combo', '1');
-
-        // Append with <br>; makeLinkRow() will normalize it
-        td.appendChild(document.createElement('br'));
-        td.appendChild(a);
-
-        return { ok: true, r: x };
-    }
 
   function apply() {
     runs++;
@@ -513,28 +448,6 @@
         return x;
     }
 
-    function addCalculateAmountSoldLink(container) {
-        const td = container.querySelector('td.tdcenter[colspan]');
-        if (!td) return { ok: false, reason: 'link td not found' };
-
-        // Don’t add twice
-        if (td.querySelector('a[data-rb-calc-amount-sold]')) return { ok: true, reason: 'already exists' };
-
-        const x = getCurrentR();
-        if (x === null) return { ok: false, reason: 'no numeric r= found in URL' };
-
-        const a = document.createElement('a');
-        a.href = `https://beta.rewardsbutler.com/loy/comboproducts.php?a=1&r=${x}`;
-        a.textContent = 'Calculate Amount Sold';
-        a.setAttribute('data-rb-calc-amount-sold', '1');
-
-        // Insert it into the same td; your makeLinkRow() will format it into the row
-        td.appendChild(document.createElement('br'));
-        td.appendChild(a);
-
-        return { ok: true, r: x };
-    }
-
     function buildComboNavRow(container) {
         const td = container.querySelector('td.tdcenter[colspan]');
         if (!td) return { ok: false, reason: 'link td not found' };
@@ -578,7 +491,7 @@
             { type: 'node', node: uploadProducts },
             { type: 'node', node: existingProductSelector || null, fallback: 'Product Selector' },
             { type: 'node', node: calcAmountSold },
-            { type: 'node', node: existingReturnToCombos || null, fallback: 'Return to combos' },
+            { type: 'node', node: existingReturnToCombos || null, fallback: 'Return To Combos' },
         ];
 
         // Remove BRs and rebuild content

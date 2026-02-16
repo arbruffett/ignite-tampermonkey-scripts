@@ -28,8 +28,14 @@
   function insertTriggerNavRowBelowHeader(headerTr) {
     if (!headerTr) return { ok: false, reason: 'no header row' };
 
-    // Prevent duplicates across mutation reruns
-    if (headerTr.dataset.rbTriggerNavInserted === '1') return { ok: true, reason: 'already inserted' };
+    // Prevent duplicates across mutation reruns, but recover if nav was removed.
+    if (headerTr.dataset.rbTriggerNavInserted === '1') {
+      const existingNav = headerTr.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-trigger-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerTr.dataset.rbTriggerNavInserted;
+    }
     if (document.querySelector('tr[data-rb-trigger-nav="1"]')) {
       headerTr.dataset.rbTriggerNavInserted = '1';
       return { ok: true, reason: 'already exists' };

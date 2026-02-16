@@ -17,6 +17,7 @@
 
   let observer = null;
   let scheduled = false;
+  let observedTable = null;
 
   function getCurrentR() {
     const params = new URLSearchParams(location.search);
@@ -40,11 +41,23 @@
     return td.closest('tr') || null;
   }
 
+  function findTargetTable() {
+    const headerRow = findUpdateComboHeaderRow();
+    if (!headerRow) return null;
+    return headerRow.closest('table');
+  }
+
   function buildComboNavRowForComboEdit(headerRow) {
     if (!headerRow) return { ok: false, reason: 'no header row' };
 
-    // Avoid inserting twice
-    if (headerRow.dataset.rbNavInserted === '1') return { ok: true, reason: 'already inserted' };
+    // Avoid inserting twice, but recover if nav row was removed.
+    if (headerRow.dataset.rbNavInserted === '1') {
+      const existingNav = headerRow.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-combo-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerRow.dataset.rbNavInserted;
+    }
 
     const r = getCurrentR();
     if (r === null) return { ok: false, reason: 'no numeric r= found in URL' };
@@ -107,7 +120,7 @@
 
     // 7) Return To Combos
     appendSep(frag);
-    frag.appendChild(makeLink(`/loy/combos.php`, 'Return to combos', 'data-rb-return-combos'));
+    frag.appendChild(makeLink(`/loy/combos.php`, 'Return To Combos', 'data-rb-return-combos'));
 
     navTd.appendChild(frag);
     navTr.appendChild(navTd);
@@ -134,9 +147,27 @@
       if (observer) observer.disconnect();
       try { apply(); }
       finally {
-        if (observer) observer.observe(document.documentElement, { childList: true, subtree: true });
+        if (observer && observedTable) observer.observe(observedTable, { childList: true, subtree: true });
       }
     }, THROTTLE_MS);
+  }
+
+  function observeTargetTable() {
+    if (!observer) return false;
+
+    const table = findTargetTable();
+    if (!table) return false;
+    if (observedTable === table) return true;
+
+    observer.disconnect();
+    observedTable = table;
+    observer.observe(observedTable, { childList: true, subtree: true });
+    return true;
+  }
+
+  function startObservingWhenReady() {
+    if (observeTargetTable()) return;
+    setTimeout(startObservingWhenReady, THROTTLE_MS);
   }
 
   // Initial run
@@ -147,5 +178,5 @@
     scheduleApply();
   });
 
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  startObservingWhenReady();
 })();

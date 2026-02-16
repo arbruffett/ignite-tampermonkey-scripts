@@ -35,8 +35,14 @@
   function insertNavRowUnderHeader(headerRow) {
     if (!headerRow) return { ok: false, reason: 'no header row' };
 
-    // Prevent duplicate insertion during mutation runs
-    if (headerRow.dataset.rbNavInserted === '1') return { ok: true, reason: 'already inserted' };
+    // Prevent duplicate insertion during mutation runs, but recover if nav row was removed.
+    if (headerRow.dataset.rbNavInserted === '1') {
+      const existingNav = headerRow.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-combo-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerRow.dataset.rbNavInserted;
+    }
 
     const comboid = getComboId();
     if (comboid === null) return { ok: false, reason: 'no numeric comboid= found in URL' };
@@ -107,10 +113,10 @@
       makeLink(`/loy/comboproducts.php?a=1&r=${comboid}`, 'Calculate Amount Sold', 'data-rb-calc-amount-sold')
     );
 
-    // Return to combos
+    // Return To Combos
     appendSep(frag);
     frag.appendChild(
-      makeLink(`/loy/combos.php`, 'Return to combos', 'data-rb-return-combos')
+      makeLink(`/loy/combos.php`, 'Return To Combos', 'data-rb-return-combos')
     );
 
     navTd.appendChild(frag);

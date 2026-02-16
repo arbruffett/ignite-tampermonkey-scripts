@@ -214,13 +214,27 @@
         }
     }
 
-  // Rename: "New Member Groups" -> "Member Groups [X]" where X = # rows assigned to that section
+  // Rename the Member Groups section title to "Member Groups [X]" where X = # rows in that section.
     function renameMemberGroupsSection() {
-        const sectionId = 'rb-sec-3-new-member-groups';
+        const normalizeTitle = (s) => (s || '')
+            .replace(/\u00A0/g, ' ')
+            .replace(/[▶▼]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
 
-        // header row is the one that has the section id AND contains the formsection TD
-        const headerTr = document.querySelector(`tr[data-rb-section-id="${sectionId}"] td.formsection`)?.closest('tr');
+        const headerTr = Array.from(document.querySelectorAll('tr td.formsection'))
+            .map(td => td.closest('tr'))
+            .find(tr => {
+                if (!tr) return false;
+                const td = tr.querySelector('td.formsection');
+                if (!td) return false;
+                const title = normalizeTitle(td.textContent);
+                return title === 'New Member Groups' || /^Member Groups\s*\[\d+\]$/i.test(title);
+            }) || null;
         if (!headerTr) return;
+
+        const sectionId = headerTr.dataset.rbSectionId;
+        if (!sectionId) return;
 
         // count rows assigned to this section (exclude the header itself and exclude the Update Member row)
         const rows = Array.from(document.querySelectorAll(`tr[data-rb-section-id="${sectionId}"]`))
@@ -255,7 +269,7 @@
 
             frag.appendChild(a);
 
-            // insert line break AFTER Redeem
+            // insert line break AFTER Overrides
             if (a.textContent.trim() === 'Overrides') {
                 frag.appendChild(document.createElement('br'));
             }

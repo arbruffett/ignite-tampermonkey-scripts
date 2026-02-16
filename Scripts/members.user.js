@@ -32,13 +32,20 @@
     const g = getGroupG();
     if (g === null) return { ok: false, reason: 'no numeric g= found in URL' };
 
-    // Prevent duplicates (works across mutations)
-    if (headerEl.dataset.rbNavInserted === '1') return { ok: true, reason: 'already inserted' };
-
-    // Create a new row (best chance of matching the table layout RB uses)
     const headerRow = headerEl.closest('tr');
     const tableBody = headerRow && (headerRow.closest('tbody') || headerRow.closest('table'));
     if (!headerRow || !tableBody) return { ok: false, reason: 'could not locate header row/table body' };
+
+    // Prevent duplicates (works across mutations), but recover if nav row was removed.
+    if (headerEl.dataset.rbNavInserted === '1') {
+      const existingNav = headerRow.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-addmember-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerEl.dataset.rbNavInserted;
+    }
+
+    // Create a new row (best chance of matching the table layout RB uses)
 
     const navTr = document.createElement('tr');
     navTr.setAttribute('data-rb-addmember-nav', '1');

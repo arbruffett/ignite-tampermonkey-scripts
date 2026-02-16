@@ -28,8 +28,9 @@
     const dataTable = document.querySelector('table.basic');
     if (dataTable) dataTable.classList.add(DATA_TABLE_CLASS);
 
-    // If no nav exists, mark so CSS doesn't offset headers
+    // Keep no-nav flag in sync as nav row appears/disappears.
     if (!navTr) document.documentElement.dataset.rbNoNav = '1';
+    else delete document.documentElement.dataset.rbNoNav;
   }
 
   GM_addStyle(`

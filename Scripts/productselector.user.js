@@ -110,7 +110,7 @@
     frag.appendChild(sep());
     frag.appendChild(makeLink(`/loy/comboproducts.php?a=1&r=${comboId}`, 'Calculate Amount Sold', 'data-rb-calc-amount-sold'));
     frag.appendChild(sep());
-    frag.appendChild(makeLink(`/loy/combos.php`, 'Return to combos', 'data-rb-return-combos'));
+    frag.appendChild(makeLink(`/loy/combos.php`, 'Return To Combos', 'data-rb-return-combos'));
 
     navTd.appendChild(frag);
     navTr.appendChild(navTd);

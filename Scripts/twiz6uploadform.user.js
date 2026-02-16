@@ -140,8 +140,14 @@
   function insertNavRowUnderHeader(headerRow) {
     if (!headerRow) return { ok: false, reason: 'no header row' };
 
-    // Prevent duplicates across mutation reruns
-    if (headerRow.dataset.rbNavInserted === '1') return { ok: true, reason: 'already inserted' };
+    // Prevent duplicates across mutation reruns while allowing recovery if nav was removed.
+    if (headerRow.dataset.rbNavInserted === '1') {
+      const existingNav = headerRow.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-combo-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerRow.dataset.rbNavInserted;
+    }
 
     const r = getCurrentR();
     if (r === null) return { ok: false, reason: 'no numeric r= found in URL' };
@@ -207,7 +213,7 @@
 
     appendSep(frag);
     frag.appendChild(
-      makeLink(`/loy/combos.php`, 'Return to combos', 'data-rb-return-combos')
+      makeLink(`/loy/combos.php`, 'Return To Combos', 'data-rb-return-combos')
     );
 
     navTd.appendChild(frag);

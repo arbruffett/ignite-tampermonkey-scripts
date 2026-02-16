@@ -32,10 +32,16 @@
     const id = getId();
     if (id === null) return { ok: false, reason: 'no numeric id= found in URL' };
 
-    if (headerEl.dataset.rbTwiz5NavInserted === '1') return { ok: true, reason: 'already inserted' };
-
     const headerRow = headerEl.closest('tr');
     if (!headerRow) return { ok: false, reason: 'header row not found' };
+
+    if (headerEl.dataset.rbTwiz5NavInserted === '1') {
+      const existingNav = headerRow.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-twiz5edit-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerEl.dataset.rbTwiz5NavInserted;
+    }
 
     const navTr = document.createElement('tr');
     navTr.setAttribute('data-rb-twiz5edit-nav', '1');

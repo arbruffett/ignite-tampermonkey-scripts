@@ -54,8 +54,6 @@
     }
 
     function processRows() {
-        let changed = false;
-
         const rows = document.querySelectorAll('tr');
 
         for (const tr of rows) {
@@ -66,7 +64,6 @@
 
             if (REMOVE_LABELS.includes(labelText)) {
                 tr.style.display = 'none';
-                changed = true;
                 continue;
             }
 
@@ -76,7 +73,6 @@
                 labelTd.className = valueTd.className;
                 valueTd.className = tmp;
                 tr.insertBefore(valueTd, labelTd);
-                changed = true;
                 continue;
             }
 

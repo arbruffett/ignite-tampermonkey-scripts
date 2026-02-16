@@ -50,11 +50,17 @@
         const g = getGroupG();
         if (g === null) return { ok: false, reason: 'no numeric g= found in URL' };
 
-        // Avoid duplicates across mutations
-        if (headerEl.dataset.rbTwiz5AddNavInserted === '1') return { ok: true, reason: 'already inserted' };
-
         const headerRow = headerEl.closest('tr');
         if (!headerRow) return { ok: false, reason: 'header row not found' };
+
+        // Avoid duplicates across mutations, but recover if nav row was removed.
+        if (headerEl.dataset.rbTwiz5AddNavInserted === '1') {
+            const existingNav = headerRow.nextElementSibling;
+            if (existingNav && existingNav.matches('tr[data-rb-twiz5add1-nav="1"]')) {
+                return { ok: true, reason: 'already inserted' };
+            }
+            delete headerEl.dataset.rbTwiz5AddNavInserted;
+        }
 
         const navTr = document.createElement('tr');
         navTr.setAttribute('data-rb-twiz5add1-nav', '1');

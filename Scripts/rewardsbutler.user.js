@@ -415,7 +415,8 @@
     }
 
     function linkifyJiraKeysInTables(root = document.body) {
-        const re = /(\s)(CRM|GRA)(\d{1,})(?!\d)/g;
+        const reFilter = /\b(?:CRM|GRA)\d+(?!\d)/;
+        const reExtract = /\b(CRM|GRA)(\d+)(?!\d)/g;
         const tables = Array.from(root.querySelectorAll('table'));
         let converted = 0;
 
@@ -425,7 +426,7 @@
                 NodeFilter.SHOW_TEXT,
                 {
                     acceptNode(node) {
-                        if (!node.nodeValue || !re.test(node.nodeValue)) return NodeFilter.FILTER_SKIP;
+                        if (!node.nodeValue || !reFilter.test(node.nodeValue)) return NodeFilter.FILTER_SKIP;
 
                         const parent = node.parentElement;
                         if (!parent) return NodeFilter.FILTER_SKIP;
@@ -447,22 +448,20 @@
 
             toProcess.forEach(textNode => {
                 const text = textNode.nodeValue;
-                re.lastIndex = 0;
-                if (!re.test(text)) return;
+                reExtract.lastIndex = 0;
+                if (!reExtract.test(text)) return;
 
                 const frag = document.createDocumentFragment();
                 let lastIndex = 0;
 
-                re.lastIndex = 0;
+                reExtract.lastIndex = 0;
                 let match;
-                while ((match = re.exec(text)) !== null) {
-                    const [full, leadingSpace, prefix, digits] = match;
+                while ((match = reExtract.exec(text)) !== null) {
+                    const [full, prefix, digits] = match;
                     const start = match.index;
                     const end = start + full.length;
 
                     if (start > lastIndex) frag.appendChild(document.createTextNode(text.slice(lastIndex, start)));
-
-                    frag.appendChild(document.createTextNode(leadingSpace));
 
                     const key = `${prefix}${digits}`;
                     const jiraKey = `${prefix}-${digits}`;

@@ -41,30 +41,44 @@
     const helpRow = helpTd.closest('tr');
     if (!helpRow) return;
 
-    if (helpRow.dataset.rbUploadHeaderNavInserted === '1') return;
-
     const tbody = helpRow.closest('tbody');
     if (!tbody) return;
 
-    /* ---------- HEADER ROW ---------- */
-    const headerTr = document.createElement('tr');
-    headerTr.setAttribute('data-rb-upload-header', '1');
+    const firstCell = helpRow.querySelector('td, th');
+    const colSpan = firstCell ? (parseInt(firstCell.getAttribute('colspan') || '1', 10) || 1) : 1;
 
-    const headerTd = document.createElement('td');
-    headerTd.className = 'formheader';
-    headerTd.colSpan = 1;
-    headerTd.textContent = `Upload Members to Member Group ${g}`;
+    let headerTr = tbody.querySelector('tr[data-rb-upload-header="1"]');
+    let navTr = tbody.querySelector('tr[data-rb-upload-nav="1"]');
+    if (headerTr && navTr) return;
 
-    headerTr.appendChild(headerTd);
+    if (!headerTr) {
+      /* ---------- HEADER ROW ---------- */
+      headerTr = document.createElement('tr');
+      headerTr.setAttribute('data-rb-upload-header', '1');
 
-    /* ---------- NAV ROW ---------- */
-    const navTr = document.createElement('tr');
-    navTr.setAttribute('data-rb-upload-nav', '1');
+      const headerTd = document.createElement('td');
+      headerTd.className = 'formheader';
+      headerTd.colSpan = colSpan;
+      headerTd.textContent = `Upload Members to Member Group ${g}`;
 
-    const navTd = document.createElement('td');
-    navTd.className = 'tdcenter';
-    navTd.colSpan = 1;
-    navTd.style.whiteSpace = 'nowrap';
+      headerTr.appendChild(headerTd);
+      tbody.insertBefore(headerTr, helpRow);
+    }
+
+    if (headerTr.querySelector('td, th')) {
+      const td = headerTr.querySelector('td, th');
+      td.setAttribute('colspan', String(colSpan));
+    }
+
+    if (!navTr) {
+      /* ---------- NAV ROW ---------- */
+      navTr = document.createElement('tr');
+      navTr.setAttribute('data-rb-upload-nav', '1');
+
+      const navTd = document.createElement('td');
+      navTd.className = 'tdcenter';
+      navTd.colSpan = colSpan;
+      navTd.style.whiteSpace = 'nowrap';
 
       const frag = document.createDocumentFragment();
       const sep = () => frag.appendChild(document.createTextNode(' | '));
@@ -107,14 +121,14 @@
       returnGroups.textContent = 'Return to Groups';
       frag.appendChild(returnGroups);
 
-    navTd.appendChild(frag);
-    navTr.appendChild(navTd);
+      navTd.appendChild(frag);
+      navTr.appendChild(navTd);
 
-    /* ---------- INSERT ---------- */
-    tbody.insertBefore(headerTr, helpRow);
-    tbody.insertBefore(navTr, helpRow);
-
-    helpRow.dataset.rbUploadHeaderNavInserted = '1';
+      if (headerTr.parentElement === tbody) headerTr.insertAdjacentElement('afterend', navTr);
+      else tbody.insertBefore(navTr, helpRow);
+    } else if (navTr.querySelector('td, th')) {
+      navTr.querySelector('td, th').setAttribute('colspan', String(colSpan));
+    }
   }
 
   function apply() {

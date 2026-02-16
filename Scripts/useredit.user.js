@@ -43,6 +43,29 @@
     return { tr, checkbox, labelText: normalizeLabel(labelSource.textContent || '') };
   }
 
+  function collectPermissionRowsInSection(rows, startIdx) {
+    const data = [];
+
+    // Find where the permission block actually starts.
+    let firstPermissionIdx = -1;
+    for (let i = startIdx + 1; i < rows.length; i++) {
+      if (extractRowData(rows[i])) {
+        firstPermissionIdx = i;
+        break;
+      }
+    }
+    if (firstPermissionIdx === -1) return data;
+
+    // Collect only the contiguous permission block.
+    for (let i = firstPermissionIdx; i < rows.length; i++) {
+      const d = extractRowData(rows[i]);
+      if (!d) break; // section boundary reached
+      data.push(d);
+    }
+
+    return data;
+  }
+
     function clampInputSizes(maxSize = 20) {
         let changed = 0;
 
@@ -114,12 +137,8 @@
     const startIdx = rows.indexOf(startRow);
     if (startIdx === -1) return;
 
-    // Collect permission rows
-    const data = [];
-    for (let i = startIdx + 1; i < rows.length; i++) {
-      const d = extractRowData(rows[i]);
-      if (d) data.push(d);
-    }
+    // Collect only rows from the permission section.
+    const data = collectPermissionRowsInSection(rows, startIdx);
 
     if (data.length === 0) {
       table.dataset.rbColsDone = String(COLS);

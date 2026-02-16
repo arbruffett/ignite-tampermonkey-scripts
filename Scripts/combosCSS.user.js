@@ -64,7 +64,6 @@
     /* Keep the top "Product Combos" header readable */
     table.rb-combos-table td.formheader,
     table.rb-combos-table th.formheader {
-      top: 1;
       background: #272727 !important;
       color: #fff !important;
     }

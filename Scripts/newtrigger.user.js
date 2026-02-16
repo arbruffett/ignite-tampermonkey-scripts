@@ -1,6 +1,5 @@
 // ==UserScript==
 // @name         New Trigger Setup
-// @namespace    http://tampermonkey.net/
 // @version      1.0.1
 // @description  Automatically change Continue Giving from No (0) to Yes (1)
 // @match        https://*.rewardsbutler.com/loy/prizeedit.php?i=&n=&multi=1&crm=&agency=*&consultant=&parentco=*

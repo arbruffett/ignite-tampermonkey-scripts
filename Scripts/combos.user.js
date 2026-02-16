@@ -191,12 +191,6 @@
   // =========================================================
   // TABLE FINDERS
   // =========================================================
-  function findHeaderRow() {
-    const headerCell = document.querySelector('td.formsubheader, th.formsubheader');
-    if (!headerCell) return null;
-    return headerCell.closest('tr');
-  }
-
   function getHeaderCells(headerRow) {
     return Array.from(headerRow.querySelectorAll('td.formsubheader, th.formsubheader'));
   }

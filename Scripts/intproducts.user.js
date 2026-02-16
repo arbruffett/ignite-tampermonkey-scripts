@@ -1,6 +1,5 @@
 // ==UserScript==
 // @name         intproducts.php
-// @namespace    ignite-rewardsbutler
 // @version      1.0.1
 // @description  Enable click-to-sort on Loyalty Reward Exceptions table on /loy/intproducts.php
 // @match        *://*.rewardsbutler.com/loy/intproducts.php*

@@ -32,12 +32,18 @@
     const g = getGroupG();
     if (g === null) return { ok: false, reason: 'no numeric g= found in URL' };
 
-    // Avoid duplicates across mutations
-    if (headerEl.dataset.rbNavInserted === '1') return { ok: true, reason: 'already inserted' };
-
     const headerRow = headerEl.closest('tr');
     const container = headerRow && (headerRow.closest('tbody') || headerRow.closest('table'));
     if (!headerRow || !container) return { ok: false, reason: 'could not locate header row/container' };
+
+    // Avoid duplicates across mutations, but recover if nav row was removed.
+    if (headerEl.dataset.rbNavInserted === '1') {
+      const existingNav = headerRow.nextElementSibling;
+      if (existingNav && existingNav.matches('tr[data-rb-range-nav="1"]')) {
+        return { ok: true, reason: 'already inserted' };
+      }
+      delete headerEl.dataset.rbNavInserted;
+    }
 
     const navTr = document.createElement('tr');
     navTr.setAttribute('data-rb-range-nav', '1');

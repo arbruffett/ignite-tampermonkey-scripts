@@ -383,6 +383,7 @@
                 hud?.set?.("Last sort dir", dir);
 
                 if (!parent || !marker || rows.length < 2) {
+                    if (marker?.parentNode) marker.remove();
                     hud?.log?.(`SORT: only ${rows.length} rows in data block.`);
                     return;
                 }
