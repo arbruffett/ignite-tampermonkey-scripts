@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         userbrowse.php
-// @version      2.3.1
+// @version      2.3.2
 // @description  Populate emails from useredit.php, skip already-email links, add sortable headers, optional debug HUD with sorting diagnostics.
 // @match        https://*.rewardsbutler.com/admin/userbrowse.php*
 // @grant        GM.xmlHttpRequest
@@ -23,10 +23,14 @@
   // =========================================================
   const ENABLE_DEBUG_HUD = false;      // set false to hide debug HUD completely
   const ENABLE_SORTING = true;        // set true to enable table sorting
-  const CONCURRENCY = 200;            // be mindful of server load
+  const CONCURRENCY = 40;             // safer default for large tables
+  const MIN_CONCURRENCY = 10;
+  const MAX_CONCURRENCY = 60;
   const REQUEST_GAP_MS = 10;           // add small delay (e.g., 25-100) if needed
   const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
   const CACHE_KEY = "rb_email_cache_v5";
+  const HUD_UPDATE_INTERVAL_MS = 200;
+  const DOM_FLUSH_INTERVAL_MS = 75;
 
   // =========================================================
   // UTIL
@@ -86,18 +90,6 @@
     const input = doc.querySelector('input[name="email_address"]');
     const email = (input?.value || "").trim();
     return email.includes("@") ? email : null;
-  }
-
-  async function runPool(items, worker, concurrency) {
-    let idx = 0;
-    async function runner() {
-      while (true) {
-        const i = idx++;
-        if (i >= items.length) return;
-        await worker(items[i], i);
-      }
-    }
-    await Promise.all(Array.from({ length: concurrency }, runner));
   }
 
   // =========================================================
@@ -179,6 +171,10 @@
       "DOM updated",
       "In-flight",
       "Elapsed (s)",
+      "Concurrency",
+      "Flush avg (ms)",
+      "Flush max (ms)",
+      "Flush count",
       // sorting stats
       "Sort rows found",
       "Last sort col",
@@ -218,6 +214,67 @@
       hide: () => (hud.style.display = "none"),
       show: () => (hud.style.display = "block"),
       isVisible: () => hud.style.display !== "none",
+    };
+  }
+
+  function createDomBatcher(hud) {
+    const pending = new Map();
+    let timer = null;
+    let flushing = false;
+    let flushCount = 0;
+    let flushTotalMs = 0;
+    let flushMaxMs = 0;
+    let lastFlushMs = 0;
+
+    function updateHud() {
+      if (!hud?.set) return;
+      const avg = flushCount ? (flushTotalMs / flushCount) : 0;
+      hud.set("Flush avg (ms)", avg.toFixed(2));
+      hud.set("Flush max (ms)", flushMaxMs.toFixed(2));
+      hud.set("Flush count", flushCount);
+    }
+
+    function flushNow() {
+      timer = null;
+      if (!pending.size || flushing) return;
+      flushing = true;
+      const start = now();
+      for (const [a, text] of pending) {
+        a.textContent = text;
+      }
+      pending.clear();
+      lastFlushMs = now() - start;
+      flushCount++;
+      flushTotalMs += lastFlushMs;
+      flushMaxMs = Math.max(flushMaxMs, lastFlushMs);
+      flushing = false;
+      updateHud();
+    }
+
+    function scheduleFlush() {
+      if (timer !== null) return;
+      timer = window.setTimeout(flushNow, DOM_FLUSH_INTERVAL_MS);
+    }
+
+    async function drain() {
+      if (timer !== null) {
+        clearTimeout(timer);
+        flushNow();
+      } else if (pending.size) {
+        flushNow();
+      }
+    }
+
+    return {
+      set: (a, text) => {
+        pending.set(a, text);
+        scheduleFlush();
+      },
+      drain,
+      stats: () => ({
+        lastFlushMs,
+        flushCount,
+      }),
     };
   }
 
@@ -277,12 +334,16 @@
         }
 
         // Style + arrow UI
-        const style = document.createElement("style");
-        style.textContent = `
+        let style = document.getElementById("rb-userbrowse-sort-style");
+        if (!style) {
+            style = document.createElement("style");
+            style.id = "rb-userbrowse-sort-style";
+            style.textContent = `
     .rb-sortable { cursor:pointer; user-select:none; }
     .rb-sort-arrow { display:inline-block; margin-left:6px; font-weight:bold; }
   `;
-        document.head.appendChild(style);
+            document.head.appendChild(style);
+        }
 
         headers.forEach(h => {
             if (!h.querySelector(".rb-sort-arrow")) {
@@ -442,25 +503,45 @@
   async function populateEmails(hud) {
     const start = now();
     let cache = loadCache();
+    const domBatcher = createDomBatcher(hud);
 
     const allLinks = Array.from(document.querySelectorAll('td a[href^="useredit.php"]'));
     const skippedLinks = allLinks.filter(a => (a.textContent || "").includes("@"));
     const links = allLinks.filter(a => !(a.textContent || "").includes("@"));
 
-    const jobs = links.map(a => ({ a, url: absoluteUrl(a.getAttribute("href")) }));
+    const jobs = links.map(a => {
+      const url = absoluteUrl(a.getAttribute("href"));
+      return { a, url, cached: getCached(cache, url) };
+    });
     const uniqueUrls = new Set(jobs.map(j => j.url));
 
     let cachedHits = 0, fetchedOk = 0, fetchFailed = 0, noEmail = 0, domUpdated = 0, inflight = 0;
+    let currentConcurrency = CONCURRENCY;
+    let completedFetches = 0;
+    let hudTimer = null;
 
     hud?.set?.("Total links", allLinks.length);
     hud?.set?.("Skipped (@ in text)", skippedLinks.length);
     hud?.set?.("Unique URLs", uniqueUrls.size);
+    hud?.set?.("Concurrency", currentConcurrency);
+
+    function scheduleHudUpdate() {
+      if (!hud?.set || hudTimer !== null) return;
+      hudTimer = window.setTimeout(() => {
+        hudTimer = null;
+        hud.set("Fetched OK", fetchedOk);
+        hud.set("Fetch failed", fetchFailed);
+        hud.set("No email found", noEmail);
+        hud.set("DOM updated", domUpdated);
+        hud.set("In-flight", inflight);
+        hud.set("Elapsed (s)", ((now() - start) / 1000).toFixed(1));
+      }, HUD_UPDATE_INTERVAL_MS);
+    }
 
     // Apply cached first
     for (const j of jobs) {
-      const cached = getCached(cache, j.url);
-      if (cached) {
-        j.a.textContent = cached;
+      if (j.cached) {
+        domBatcher.set(j.a, j.cached);
         cachedHits++;
         domUpdated++;
       }
@@ -468,7 +549,9 @@
     hud?.set?.("Cached hits", cachedHits);
     hud?.set?.("DOM updated", domUpdated);
 
-    const jobsToFetch = jobs.filter(j => !getCached(cache, j.url));
+    await domBatcher.drain();
+
+    const jobsToFetch = jobs.filter(j => !j.cached);
     hud?.log?.(`Email pass: ${jobsToFetch.length} fetches needed (concurrency=${CONCURRENCY}).`);
 
     // cache clear button
@@ -481,37 +564,77 @@
       };
     }
 
-    await runPool(jobsToFetch, async (job) => {
-      inflight++;
-      hud?.set?.("In-flight", inflight);
+    await new Promise((resolve) => {
+      let cursor = 0;
+      let active = 0;
 
-      try {
-        const html = await fetchHtml(job.url);
-        const email = extractEmail(html);
-
-        if (email) {
-          setCached(cache, job.url, email);
-          job.a.textContent = email;
-          domUpdated++;
-          fetchedOk++;
-        } else {
-          noEmail++;
-          fetchedOk++;
+      const tuneConcurrency = () => {
+        const lag = domBatcher.stats().lastFlushMs;
+        if (lag > 32 && currentConcurrency > MIN_CONCURRENCY) {
+          currentConcurrency = Math.max(MIN_CONCURRENCY, currentConcurrency - 5);
+        } else if (lag < 8 && currentConcurrency < MAX_CONCURRENCY) {
+          currentConcurrency = Math.min(MAX_CONCURRENCY, currentConcurrency + 1);
         }
-      } catch {
-        fetchFailed++;
-      } finally {
-        inflight--;
-        hud?.set?.("Fetched OK", fetchedOk);
-        hud?.set?.("Fetch failed", fetchFailed);
-        hud?.set?.("No email found", noEmail);
-        hud?.set?.("DOM updated", domUpdated);
-        hud?.set?.("In-flight", inflight);
-        hud?.set?.("Elapsed (s)", ((now() - start) / 1000).toFixed(1));
-        if (REQUEST_GAP_MS) await sleep(REQUEST_GAP_MS);
-      }
-    }, CONCURRENCY);
+        hud?.set?.("Concurrency", currentConcurrency);
+      };
 
+      const maybeDone = () => {
+        if (cursor >= jobsToFetch.length && active === 0) {
+          resolve();
+        }
+      };
+
+      const launch = () => {
+        while (active < currentConcurrency && cursor < jobsToFetch.length) {
+          const job = jobsToFetch[cursor++];
+          active++;
+          inflight++;
+          scheduleHudUpdate();
+
+          (async () => {
+            try {
+              const html = await fetchHtml(job.url);
+              const email = extractEmail(html);
+
+              if (email) {
+                setCached(cache, job.url, email);
+                domBatcher.set(job.a, email);
+                domUpdated++;
+                fetchedOk++;
+              } else {
+                noEmail++;
+                fetchedOk++;
+              }
+            } catch {
+              fetchFailed++;
+            } finally {
+              active--;
+              inflight--;
+              completedFetches++;
+              if (completedFetches % 25 === 0) tuneConcurrency();
+              scheduleHudUpdate();
+              if (REQUEST_GAP_MS) await sleep(REQUEST_GAP_MS);
+              launch();
+              maybeDone();
+            }
+          })();
+        }
+      };
+
+      launch();
+      maybeDone();
+    });
+
+    await domBatcher.drain();
+    if (hudTimer !== null) {
+      clearTimeout(hudTimer);
+      hudTimer = null;
+    }
+    hud?.set?.("Fetched OK", fetchedOk);
+    hud?.set?.("Fetch failed", fetchFailed);
+    hud?.set?.("No email found", noEmail);
+    hud?.set?.("DOM updated", domUpdated);
+    hud?.set?.("In-flight", inflight);
     saveCache(cache);
     hud?.set?.("Elapsed (s)", ((now() - start) / 1000).toFixed(2));
     hud?.log?.(`Email pass complete. ok=${fetchedOk}, failed=${fetchFailed}, noEmail=${noEmail}.`);

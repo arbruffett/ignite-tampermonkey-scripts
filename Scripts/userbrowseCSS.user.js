@@ -4,7 +4,7 @@
 // @match        https://*.rewardsbutler.com/admin/userbrowse.php*
 // @author       arbruffett
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.0
+// @version      1.0.1
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/userbrowseCSS.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/userbrowseCSS.user.js
 // @run-at       document-end
@@ -13,6 +13,38 @@
 
 (function () {
   'use strict';
+
+  function norm(s) {
+    return (s || "")
+      .replace(/\u00A0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/[▲▼]\s*$/, "")
+      .trim();
+  }
+
+  function findTargetTable() {
+    const headerCells = ["Login", "Name", "Org type", "Org name", "Database", "Actions"];
+    const rows = Array.from(document.querySelectorAll("tr"));
+    for (const tr of rows) {
+      const tds = Array.from(tr.querySelectorAll("td.formsubheader, th.formsubheader"));
+      if (tds.length !== headerCells.length) continue;
+      const texts = tds.map(td => norm(td.textContent));
+      if (!texts.every((t, i) => t === headerCells[i])) continue;
+      const table = tr.closest("table");
+      if (!table) continue;
+      return { table, headerTr: tr };
+    }
+    return null;
+  }
+
+  const target = findTargetTable();
+  if (target?.table) {
+    target.table.classList.add("rb-ub-table");
+  }
+  if (target?.headerTr) {
+    target.headerTr.dataset.rbUbHead = "1";
+  }
 
   const CSS = `
 /* =========================
@@ -26,49 +58,35 @@
   --rb-band-even: rgba(0,0,0,.00);
 }
 
-/* =========================
-   Row banding
-   =========================
-   Only bands "data rows" (skips obvious header-ish rows).
-   We do banding by applying it broadly to tbody > tr and then
-   neutralizing header-like rows below.
-*/
-tbody > tr:nth-child(odd){
+/* Only band data rows in userbrowse table */
+table.rb-ub-table tr.browse-item:nth-child(odd){
   background: var(--rb-band-odd);
 }
-tbody > tr:nth-child(even){
+table.rb-ub-table tr.browse-item:nth-child(even){
   background: var(--rb-band-even);
 }
 
-    /* Don’t band form headers/subheaders/section rows */
-    tr:has(td.formheader),
-    tr:has(td.formsubheader),
-    tr:has(td.formsection){
-    background: transparent !important;
-  }
+/* Optional: subtle hover highlight for readability */
+table.rb-ub-table tr.browse-item:hover td,
+table.rb-ub-table tr.browse-item:hover th {
+  background: rgba(0,0,0,0.1);
+}
 
-    /* Optional: subtle hover highlight for readability */
-    tr:not([data-rb-trigger-nav]):not(:has(td.formheader)):not(:has(td.formsubheader)):hover td,
-    tr:not([data-rb-trigger-nav]):not(:has(td.formheader)):not(:has(td.formsubheader)):hover th {
-      background: rgba(0,0,0,0.1);
-    }
-
-    /* Sticky ONLY the real column header row */
-    tr:not([data-rb-trigger-nav]) > td.formsubheader:not([data-rb-nav]),
-    tr:not([data-rb-trigger-nav]) > th.formsubheader:not([data-rb-nav]) {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: #FF8D19;
-      /* keeps header readable when scrolling */
-      box-shadow: 0 1px 0 rgba(0,0,0,0.08);
-      white-space: nowrap;
-    }
+/* Sticky only the identified userbrowse header row */
+table.rb-ub-table tr[data-rb-ub-head="1"] > td.formsubheader,
+table.rb-ub-table tr[data-rb-ub-head="1"] > th.formsubheader {
+  position: sticky;
+  top: var(--rb-sticky-top);
+  z-index: 30;
+  background: #FF8D19;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+  white-space: nowrap;
+}
 
 /* =========================
    Keep formheader readable (fixes your "black -> white" reload issue)
    ========================= */
-td.formheader{
+table.rb-ub-table td.formheader{
   background: #272727 !important;
   color: #fff !important;
 }
