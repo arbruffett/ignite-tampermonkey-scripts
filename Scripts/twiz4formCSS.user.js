@@ -1,9 +1,10 @@
 // ==UserScript==
-// @name         twiz4form.php (CSS)
+// @name         twiz4form.php CSS
+// @description  Reusable CSS: row banding + sticky column headers
 // @match        https://beta.rewardsbutler.com/loy/twiz4form.php*
 // @author       arbruffett
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.2
+// @version      1.0.3
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/twiz4formCSS.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/twiz4formCSS.user.js
 // @run-at       document-end
