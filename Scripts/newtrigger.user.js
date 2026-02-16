@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         New Trigger Setup
-// @version      1.0.1
+// @version      1.0.2
 // @description  Automatically change Continue Giving from No (0) to Yes (1)
 // @match        https://*.rewardsbutler.com/loy/prizeedit.php?i=&n=&multi=1&crm=&agency=*&consultant=&parentco=*
 // @author       arbruffett
