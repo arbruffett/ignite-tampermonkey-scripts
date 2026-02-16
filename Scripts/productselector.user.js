@@ -3,7 +3,7 @@
 // @match        https://beta.rewardsbutler.com/loy/productselector.php?r=0&comboid=*
 // @author       arbruffett
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.0
+// @version      1.0.1
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/productselector.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/productselector.user.js
 // @grant        none
@@ -51,8 +51,8 @@
   }
 
   function buildFormHeaderAbove(anchorTr) {
-    const comboid = getComboId();
-    if (comboid === null) return { ok: false, reason: 'no numeric comboid= in URL' };
+    const comboId = getComboId();
+    if (comboId === null) return { ok: false, reason: 'no numeric comboid= in URL' };
 
     const firstCell = anchorTr.querySelector('td, th');
     const colSpan = firstCell ? (parseInt(firstCell.getAttribute('colspan') || '2', 10) || 2) : 2;
@@ -63,18 +63,18 @@
     const headerTd = document.createElement('td');
     headerTd.className = 'formheader';
     headerTd.colSpan = colSpan;
-    headerTd.textContent = `Product Selector for Combo ${comboid}`;
+    headerTd.textContent = `Product Selector for Combo ${comboId}`;
 
     headerTr.appendChild(headerTd);
 
     anchorTr.insertAdjacentElement('beforebegin', headerTr);
 
-    return { ok: true, headerRow: headerTr, comboid };
+    return { ok: true, headerRow: headerTr, comboId };
   }
 
   function insertNavRowUnderHeader(headerRow) {
-    const comboid = getComboId();
-    if (comboid === null) return { ok: false, reason: 'no numeric comboid= in URL' };
+    const comboId = getComboId();
+    if (comboId === null) return { ok: false, reason: 'no numeric comboid= in URL' };
 
     const colSpan = parseInt(headerRow.querySelector('td, th')?.getAttribute('colspan') || '2', 10) || 2;
 
@@ -98,17 +98,17 @@
 
     const frag = document.createDocumentFragment();
 
-    frag.appendChild(makeLink(`/loy/comboedit.php?r=${comboid}`, 'Edit Combo', 'data-rb-edit-combo'));
+    frag.appendChild(makeLink(`/loy/comboedit.php?r=${comboId}`, 'Edit Combo', 'data-rb-edit-combo'));
     frag.appendChild(sep());
-    frag.appendChild(makeLink(`/loy/comboproducts.php?r=${comboid}`, 'View Products', 'data-rb-view-products'));
+    frag.appendChild(makeLink(`/loy/comboproducts.php?r=${comboId}`, 'View Products', 'data-rb-view-products'));
     frag.appendChild(sep());
-    frag.appendChild(makeLink(`/loy/comboproductedit.php?r=0&comboid=${comboid}`, 'New Product', 'data-rb-new-product'));
+    frag.appendChild(makeLink(`/loy/comboproductedit.php?r=0&comboid=${comboId}`, 'New Product', 'data-rb-new-product'));
     frag.appendChild(sep());
-    frag.appendChild(makeLink(`/loy/twiz6uploadform.php?r=${comboid}`, 'Upload Products', 'data-rb-upload-products'));
+    frag.appendChild(makeLink(`/loy/twiz6uploadform.php?r=${comboId}`, 'Upload Products', 'data-rb-upload-products'));
     frag.appendChild(sep());
     frag.appendChild(document.createTextNode('Product Selector'));
     frag.appendChild(sep());
-    frag.appendChild(makeLink(`/loy/comboproducts.php?a=1&r=${comboid}`, 'Calculate Amount Sold', 'data-rb-calc-amount-sold'));
+    frag.appendChild(makeLink(`/loy/comboproducts.php?a=1&r=${comboId}`, 'Calculate Amount Sold', 'data-rb-calc-amount-sold'));
     frag.appendChild(sep());
     frag.appendChild(makeLink(`/loy/combos.php`, 'Return to combos', 'data-rb-return-combos'));
 
@@ -117,7 +117,7 @@
 
     headerRow.insertAdjacentElement('afterend', navTr);
 
-    return { ok: true, comboid };
+    return { ok: true, comboId };
   }
 
   function apply() {

@@ -3,7 +3,7 @@
 // @match        https://beta.rewardsbutler.com/loy/prizeoffer.php*
 // @author       arbruffett
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.0
+// @version      1.0.1
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/prizeoffer.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/prizeoffer.user.js
 // @grant        none
@@ -12,20 +12,20 @@
 (function () {
   'use strict';
 
-   const input = '500px';
+  const input = '500px';
 
   function getRParam() {
     const params = new URLSearchParams(location.search);
     return params.get('r') || params.get('id') || params.get('record') || params.get('RecordID');
   }
 
-    function clampImputFieldLength() {
-        document.querySelectorAll('input[size="80"]').forEach(i => {
-            i.style.maxWidth = input;
-            i.style.width = '100%';       // optional: responsive within max
-            // i.removeAttribute('size');    // optional: remove native width hint
-        });
-    }
+  function clampInputFieldLength() {
+    document.querySelectorAll('input[size="80"]').forEach(i => {
+      i.style.maxWidth = input;
+      i.style.width = '100%'; // optional: responsive within max
+      // i.removeAttribute('size'); // optional: remove native width hint
+    });
+  }
 
   function buildStandardHeaderTd(rValue) {
     const td = document.createElement('td');
@@ -111,5 +111,5 @@
   }
 
   replacePrizeOfferHeader();
-  clampImputFieldLength();
+  clampInputFieldLength();
 })();
