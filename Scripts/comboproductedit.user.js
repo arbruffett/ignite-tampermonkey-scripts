@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         comboproductedit.php
-// @version      1.6
+// @version      1.6.1
 // @description  Removes unwanted rows and reorders/switches layout for checkdigit row
 // @match        https://beta.rewardsbutler.com/loy/comboproductedit.php*
 // @run-at       document-idle
