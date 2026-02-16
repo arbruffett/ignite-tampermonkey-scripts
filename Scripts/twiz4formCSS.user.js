@@ -3,7 +3,7 @@
 // @match        https://beta.rewardsbutler.com/loy/twiz4form.php*
 // @author       arbruffett
 // @namespace    https://github.com/arbruffett/ignite-tampermonkey-scripts
-// @version      1.0.1
+// @version      1.0.2
 // @downloadURL  https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/twiz4formCSS.user.js
 // @updateURL    https://raw.githubusercontent.com/arbruffett/ignite-tampermonkey-scripts/refs/heads/main/Scripts/twiz4formCSS.user.js
 // @run-at       document-end
@@ -36,7 +36,7 @@
   GM_addStyle(`
     :root{
       --rb-top: 0px;
-      --rb-nav-h: 34px;     /* adjust if your nav is taller */
+      --rb-nav-h: 0px;     /* adjust if your nav is taller */
       --rb-bg: #FF8D19;
       --rb-fg: #111;
       --rb-band: rgba(0,0,0,.06);
