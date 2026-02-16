@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         customerdrill.php
-// @version      1.3.1
+// @version      1.3.2
 // @description  Adds State and Status columns by fetching customeredit.php pages asynchronously (cached) + sortable headers.
 // @match        https://beta.rewardsbutler.com/loy/customerdrill.php*
 // @grant        GM.xmlHttpRequest
