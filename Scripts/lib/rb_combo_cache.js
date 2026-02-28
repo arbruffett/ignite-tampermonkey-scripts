@@ -29,18 +29,37 @@
   // You said scope MUST come from this select (no URL parsing).
   function readProgramFromSelect() {
     const sel = document.querySelector('#change-program');
-    if (!sel) return '';
-
-    const selectedValue = sel.value || '';
-    if (selectedValue && selectedValue.includes('|')) {
-      const parts = selectedValue.split('|');
-      const right = parts[parts.length - 1];
-      if (right) return right;
+    if (sel) {
+      // Prefer the selected option's visible text (often the real program name)
+      const opt = sel.selectedOptions && sel.selectedOptions[0];
+      const text = (opt && opt.textContent) ? opt.textContent.trim() : '';
+  
+      // Sometimes .value contains "id|program" style; sometimes it's a DB key.
+      const val = (sel.value || '').trim();
+  
+      // Ignore placeholders
+      const isPlaceholder = (s) => !s || /^change program$/i.test(s.trim());
+  
+      if (!isPlaceholder(text)) return text;
+  
+      if (val && val.includes('|')) {
+        const parts = val.split('|');
+        const right = parts[parts.length - 1]?.trim();
+        if (!isPlaceholder(right)) return right;
+      }
+  
+      if (!isPlaceholder(val)) return val;
     }
-    if (selectedValue) return selectedValue;
-
-    const selectedOpt = sel.selectedOptions && sel.selectedOptions[0];
-    return selectedOpt ? (selectedOpt.textContent || '') : '';
+  
+    // Select2 often renders the chosen label somewhere like this:
+    const select2Label =
+      document.querySelector('#select2-chosen-1')?.textContent?.trim() ||
+      document.querySelector('.select2-chosen')?.textContent?.trim() ||
+      '';
+  
+    if (select2Label && !/^change program$/i.test(select2Label)) return select2Label;
+  
+    return '';
   }
 
   function getScopeKey() {
